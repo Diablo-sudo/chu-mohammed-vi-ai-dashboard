@@ -1,0 +1,6 @@
+{
+  "name": "CHU Mohammed VI AI Dashboard",
+  "description": "Medical AI internship project dashboard using MIMIC-IV dataset and FastAPI backend",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
