@@ -640,9 +640,9 @@ los_distribution: {
           </div>
 
           {/* Right: toggles / actions / clock */}
-          <div className="flex items-center justify-end gap-2 shrink-0">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 flex-wrap">
             {/* Language Switch */}
-            <div className="hidden sm:flex items-center bg-[var(--color-chu-bg)] p-1 rounded-full border border-[var(--color-chu-border)]">
+            <div className="hidden lg:flex items-center bg-[var(--color-chu-bg)] p-1 rounded-full border border-[var(--color-chu-border)]">
               {['ar', 'fr', 'en'].map((l) => (
                 <button key={l} onClick={() => setLang(l as 'ar'|'fr'|'en')}
                   className={`px-2 lg:px-3 py-1 rounded-full font-bold text-[9px] lg:text-[10px] uppercase transition-all duration-300 border ${
@@ -650,7 +650,7 @@ los_distribution: {
                   {l.toUpperCase()}</button>
               ))}
             </div>
-            <div className="hidden sm:block h-5 lg:h-6 w-px bg-[rgba(0,212,170,0.3)] mx-0.5 lg:mx-1"></div>
+            <div className="hidden lg:block h-5 lg:h-6 w-px bg-[rgba(0,212,170,0.3)] mx-0.5 lg:mx-1"></div>
 
             {/* Theme Toggle */}
             <button onClick={() => setDarkMode(!darkMode)}
@@ -670,8 +670,8 @@ los_distribution: {
             {/* Upload */}
             <button onClick={() => setShowUploadModal(true)}
               title="Mettre à jour avec vos données hospitalières"
-              className="relative px-4 py-2 bg-[#00D4AA] hover:bg-[#1DE9B6] text-[#0B1426] font-semibold text-sm rounded-lg flex items-center gap-2 transition-all shadow-sm hover:shadow-[0_4px_12px_rgba(0,212,170,0.4)] ml-1 mr-1">
-              <Upload size={16} strokeWidth={2.5} className="shrink-0" /> <span className="hidden sm:inline">Charger données</span>
+              className="relative px-2 py-2 sm:px-4 sm:py-2 bg-[#00D4AA] hover:bg-[#1DE9B6] text-[#0B1426] font-semibold text-sm rounded-lg flex items-center gap-1 sm:gap-2 transition-all shadow-sm hover:shadow-[0_4px_12px_rgba(0,212,170,0.4)] ml-0.5 sm:ml-1 mr-0.5 sm:mr-1">
+              <Upload size={16} strokeWidth={2.5} className="shrink-0" /> <span className="hidden md:inline">Charger données</span>
               {!dashboardStats.isLocal && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF8C00] rounded-full animate-pulse border-2 border-[var(--color-chu-header)]"></span>
               )}
@@ -720,7 +720,7 @@ los_distribution: {
 
           <div className="hidden xl:block h-6 w-px bg-[rgba(0,212,170,0.3)] mx-1"></div>
           {/* Clock */}
-          <div className="hidden xl:flex items-center text-[#00D4AA] font-mono text-[11px] font-semibold tabular-nums px-3 py-1.5 rounded-lg border border-[rgba(0,212,170,0.2)] bg-[rgba(0,212,170,0.05)] shadow-[inset_0_0_10px_rgba(0,212,170,0.02)]">{currentTime}</div>
+          <div className="hidden md:flex items-center text-[#00D4AA] font-mono text-[11px] font-semibold tabular-nums px-3 py-1.5 rounded-lg border border-[rgba(0,212,170,0.2)] bg-[rgba(0,212,170,0.05)] shadow-[inset_0_0_10px_rgba(0,212,170,0.02)]">{currentTime}</div>
         </div>
       </header>
 
