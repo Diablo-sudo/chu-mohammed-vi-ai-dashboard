@@ -244,7 +244,7 @@ export default function App() {
   async function syncFromSheet() {
     try {
       const res = await fetch(`${API_BASE}/sheet-stats?ts=${Date.now()}`, { cache: 'no-store' });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const d = await res.json();
       setDashboardStats(prev => ({
         ...prev,
@@ -260,11 +260,12 @@ export default function App() {
         isLocal:        false,
       }));
       const synced = new Date();
-      setLastSheetSync(synced.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
-      const prevSynced = lastSheetSync;
-      setSyncStr("");
-      if (prevSynced) { setSyncStr(`✅ Synchronisé — ${synced.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`); }
-    } catch { /* ignore sheet errors */ }
+      const timeStr = synced.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      setLastSheetSync(timeStr);
+      setSyncStr(`✅ Synchronisé — ${timeStr}`);
+    } catch {
+      setSyncStr("⚠️ Données par défaut — Chargez votre CSV");
+    }
   }
 
   // ── Dashboard stats ──
@@ -281,7 +282,7 @@ los_distribution: {
     isLocal: false,
   });
 
-  const [syncStr, setSyncStr] = useState("⚠️ Données par défaut — Chargez votre CSV");
+  const [syncStr, setSyncStr] = useState("");
 
   // ── Triage prediction ──
   const [formData, setFormData] = useState({ age: 68, gender: 'Homme' as 'Homme'|'Femme', diagnosis: 'Insuffisance Cardiaque', heartrate: 80, sbp: 120, o2sat: 98, temperature: 37.0, pain: 3, dbp: 80, resprate: 16 });
@@ -744,14 +745,14 @@ los_distribution: {
           <div className="px-3 py-1.5 bg-[#00D4AA]/10 text-[#00D4AA] border border-[#00D4AA]/20 rounded-md font-bold tracking-wide">
             {dashboardStats.isLocal ? "DONNÉES LOCALES" : t.mimicDb}
           </div>
-          <div className="hidden md:flex items-center gap-2 text-[9px] font-mono">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#E8A020]/10 text-[#E8A020] border border-[#E8A020]/20">
-              <RefreshCw size={10} className={`${syncStr.startsWith("⚠") ? '' : 'hidden'} animate-spin`} />
-              <span className="font-semibold">GOOGLE SHEETS</span>
-              <span className={`font-medium tracking-wide ${syncStr.startsWith("✅") ? 'text-[#00D4AA]' : syncStr.startsWith("⚠") ? 'text-[#D64545]' : ''}`}>{syncStr || <span className="text-[9px] opacity-50">En attente...</span>}</span>
-              {lastSheetSync && <span className="opacity-70 text-[10px]">({lastSheetSync})</span>}
+            <div className="hidden md:flex items-center gap-2 text-[9px] font-mono">
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${syncStr.startsWith("✅") ? 'bg-[#00D4AA]/10 text-[#00D4AA] border-[#00D4AA]/20' : syncStr.startsWith("⚠") ? 'bg-[#D64545]/10 text-[#D64545] border-[#D64545]/20' : 'bg-[#E8A020]/10 text-[#E8A020] border-[#E8A020]/20'}`}>
+                <RefreshCw size={10} className={syncStr.startsWith("⚠") ? '' : 'hidden'} />
+                <span className="font-semibold">GOOGLE SHEETS</span>
+                <span className="font-medium tracking-wide">{syncStr || <span className="text-[9px] opacity-50">En attente...</span>}</span>
+                {lastSheetSync && <span className="opacity-70 text-[10px]">({lastSheetSync})</span>}
+              </div>
             </div>
-          </div>
         </div>
         <div className="flex items-center gap-2 bg-[var(--color-chu-card)] px-3 py-1.5 rounded-md border border-[var(--color-chu-border)]">
           <span className="font-semibold text-[var(--color-chu-text)] uppercase">LANG: {lang === 'ar' ? 'العربية' : lang === 'fr' ? 'Français' : 'English'}</span>
