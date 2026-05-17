@@ -261,6 +261,9 @@ export default function App() {
       }));
       const synced = new Date();
       setLastSheetSync(synced.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+      const prevSynced = lastSheetSync;
+      setSyncStr("");
+      if (prevSynced) { setSyncStr(`✅ Synchronisé — ${synced.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`); }
     } catch { /* ignore sheet errors */ }
   }
 
@@ -743,9 +746,9 @@ los_distribution: {
           </div>
           <div className="hidden md:flex items-center gap-2 text-[9px] font-mono">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#E8A020]/10 text-[#E8A020] border border-[#E8A020]/20">
-              <RefreshCw size={10} className="animate-spin" />
+              <RefreshCw size={10} className={`${syncStr.startsWith("⚠") ? '' : 'hidden'} animate-spin`} />
               <span className="font-semibold">GOOGLE SHEETS</span>
-              <span className="font-medium text-[#00D4AA] tracking-wide">{syncStr}</span>
+              <span className={`font-medium tracking-wide ${syncStr.startsWith("✅") ? 'text-[#00D4AA]' : syncStr.startsWith("⚠") ? 'text-[#D64545]' : ''}`}>{syncStr || <span className="text-[9px] opacity-50">En attente...</span>}</span>
               {lastSheetSync && <span className="opacity-70 text-[10px]">({lastSheetSync})</span>}
             </div>
           </div>
