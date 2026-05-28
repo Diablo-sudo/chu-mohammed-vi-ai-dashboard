@@ -31,7 +31,7 @@ export default function ReadmissionAutoCard({ t }: ReadmissionAutoCardProps) {
   };
 
   return (
-    <div className="bg-[var(--color-chu-card)]/80 backdrop-blur rounded-2xl border border-[var(--color-chu-border)]/10 shadow-xl p-6">
+    <div className="bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl p-6" style={{ boxShadow: 'var(--card-shadow)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[var(--color-chu-text)] font-bold text-lg flex items-center gap-2">
