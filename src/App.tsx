@@ -10,7 +10,9 @@ import KPICard from './components/KPICard';
 import ChartCard from './components/ChartCard';
 import AlertsBanner from './components/AlertsBanner';
 import TriagePanel from './components/TriagePanel';
+import TriageSummaryWidget from './components/TriageSummaryWidget';
 import ReadmissionCard from './components/ReadmissionCard';
+import ReadmissionAutoCard from './components/ReadmissionAutoCard';
 import UploadModal from './components/UploadModal';
 
 import { API_BASE, translations } from './constants/translations';
@@ -49,6 +51,7 @@ export default function App() {
   // ── Refs for exact measurements ──
   const navbarRef = useRef<HTMLElement>(null);
   const statusBarRef = useRef<HTMLDivElement>(null);
+  const initAlertsGuard = useRef(false); // guard against duplicate startup alerts
   const [navbarH, setNavbarH] = useState(88);
   const [statusBarH, setStatusBarH] = useState(0);
   const [apiStatus, setApiStatus] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
@@ -91,7 +94,7 @@ export default function App() {
   const t = translations[lang];
 
   // ── Notifications ──
-  const { alerts, setAlerts, showNotifications, setShowNotifications, unreadAlerts, dismissAlert, getAlertSeverityLevel, addAlert } = useAlerts();
+  const { alerts, visibleToasts, dismissToast, setAlerts, showNotifications, setShowNotifications, unreadAlerts, dismissAlert, getAlertSeverityLevel, addAlert } = useAlerts();
 
   // ── Dashboard stats ──
   const { dashboardStats, setDashboardStats, syncStr, setSyncStr, lastSheetSync, setLastSheetSync, syncFromSheet } = useDashboardStats();
@@ -198,8 +201,15 @@ export default function App() {
 
   // ── Initial alerts and clock setup ──
   useEffect(() => {
-    addAlert('INFO', `Système IA opérationnel - Dernière sync: ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}`);
-    addAlert('AVERTISSEMENT', "Taux de réadmission > 10% ce mois");
+    // Initialize two startup alerts using addAlert
+    function formatTime(date: Date) {
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    if (!initAlertsGuard.current) {
+      initAlertsGuard.current = true;
+      addAlert('INFO', `Système IA opérationnel - Dernière sync: ${formatTime(new Date())}`);
+      addAlert('AVERTISSEMENT', 'Taux de réadmission > 10% ce mois');
+    }
 
     const updateTime = () => {
       const now = new Date();
@@ -395,7 +405,7 @@ export default function App() {
                 <div className="absolute top-full right-0 mt-2 w-80 bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl shadow-2xl z-50 overflow-hidden text-left backdrop-blur-xl">
                   <div className="px-4 py-3 border-b border-[var(--color-chu-border)] bg-[var(--color-chu-header)] flex justify-between items-center">
                     <h3 className="font-bold text-sm text-[var(--color-chu-text)]">{t.systemAlerts}</h3>
-                    <button onClick={() => setAlerts([])} className="text-xs text-[var(--color-chu-text-sec)] hover:text-[#00D4AA] transition-colors">{t.clearAll}</button>
+                    <button onClick={() => alerts.forEach(a => dismissAlert(a.id))} className="text-xs text-[var(--color-chu-text-sec)] hover:text-[#00D4AA] transition-colors">{t.clearAll}</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {alerts.length === 0 ? (
@@ -461,10 +471,11 @@ export default function App() {
        </div>
 
         <AlertsBanner
-          alerts={alerts}
+          visibleToasts={visibleToasts}
+          allAlerts={alerts}
           navbarH={navbarH}
           statusBarH={statusBarH}
-          dismissAlert={dismissAlert}
+          dismissToast={dismissToast}
           getAlertSeverityLevel={getAlertSeverityLevel}
         />
 
@@ -475,13 +486,9 @@ export default function App() {
 
        {/* ── DASHBOARD TAB ── */}
        {activeTab === 'Dashboard' && (
-         <div className="flex flex-col gap-6" style={{ marginTop: alerts.length > 0 ? `${navbarH + statusBarH + 80}px` : `${navbarH + statusBarH + 24}px` }}>
-           {/* FIX: Compact Triage Section Header replacing the large banner (FIX UI 1) */}
-           <div className="flex items-center gap-2 mb-4">
-             <span className="text-xl">🚑</span>
-             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Triage Rapide</h2>
-             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700 ml-2" />
-           </div>
+         <div className="flex flex-col gap-6" style={{ marginTop: `${navbarH + statusBarH + 24}px` }}>
+            {/* Triage du Jour summary widget */}
+            
            
 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-2">
               <KPICard darkMode={darkMode} title={t.patientsTotal} value={dashboardStats.total_patients.toLocaleString()} subtitle={t.patientsSub} valueColor="text-[#00713C]" borderColor="border-l-[#00713C]" icon={Users} trend="positive" sparklineData={[4200, 4280, 4350, 4420, 4380, 4460, 4506]} sparklineColor="#00713C" sparklineFill="rgba(0,113,60,0.25)" onMouseEnter={(e) => showTooltip("↑ 12% vs mois dernier\nMin: 4000 Max: 5000\nInterprétation: Volume de patients en hausse.", e)} onMouseLeave={hideTooltip} />
@@ -490,20 +497,15 @@ export default function App() {
                 {/* FIX: NaN guard */}
                 <KPICard darkMode={darkMode} title={t.readmission} value={`${(isNaN(Number(dashboardStats.readmission_rate)) ? 0 : Number(dashboardStats.readmission_rate)).toFixed(1)}%`} subtitle={t.readmissionSub} valueColor="text-[#E8A020]" borderColor="border-l-[#E8A020]" icon={RefreshCw} trend="positive" background={dashboardStats.readmission_rate > 15 ? 'red' : dashboardStats.readmission_rate < 10 ? 'green' : undefined} sparklineData={[12.1, 11.8, 11.5, 11.9, 11.3, 11.0, 11.2]} sparklineColor="#E8A020" sparklineFill="rgba(232,160,32,0.25)" onMouseEnter={(e) => showTooltip("↑ 2% vs mois dernier\nMin: 5% Max: 20%\nInterprétation: Attention, taux critique.", e)} onMouseLeave={hideTooltip} />
                 {/* FIX: NaN guard */}
-                <KPICard darkMode={darkMode} title={t.mortality} value={`${(isNaN(Number(dashboardStats.mortality_rate)) ? 0 : Number(dashboardStats.mortality_rate)).toFixed(1)}%`} subtitle={t.mortalitySub} valueColor={dashboardStats.mortality_rate > 5 ? "text-white" : "text-[#D64545]"} borderColor="border-l-[#D64545]" icon={HeartPulse} trend="negative" background={dashboardStats.mortality_rate > 5 ? 'red' : undefined} sparklineData={[3.2, 3.0, 2.9, 3.1, 2.8, 2.7, 2.6]} sparklineColor="#D64545" sparklineFill="rgba(214,69,69,0.25)" onMouseEnter={(e) => showTooltip("↓ 1% vs mois dernier\nMin: 2j Max: 12%\nInterprétation: Baisse significative.", e)} onMouseLeave={hideTooltip} />
+                <KPICard darkMode={darkMode} title={t.mortality} value={`${(dashboardStats.mortality_rate ?? 4.2).toFixed(1)}%`} subtitle={t.mortalitySub} valueColor={dashboardStats.mortality_rate > 5 ? "text-white" : "text-[#D64545]"} borderColor="border-l-[#D64545]" icon={HeartPulse} trend="negative" background={dashboardStats.mortality_rate > 5 ? 'red' : undefined} sparklineData={[3.2, 3.0, 2.9, 3.1, 2.8, 2.7, 2.6]} sparklineColor="#D64545" sparklineFill="rgba(214,69,69,0.25)" onMouseEnter={(e) => showTooltip("↓ 1% vs mois dernier\nMin: 2j Max: 12%\nInterprétation: Baisse significative.", e)} onMouseLeave={hideTooltip} />
                {/* FIX: NaN guard */}
                <KPICard darkMode={darkMode} title={t.avgAge} value={`${(isNaN(Number(dashboardStats.avg_age)) ? 0 : Math.round(Number(dashboardStats.avg_age)))} ans`} subtitle={t.ageSub} valueColor="text-[#38A8D4]" borderColor="border-l-[#38A8D4]" icon={User} trend="neutral" onMouseEnter={(e) => showTooltip("↔ Stable\nMin: 18 Max: 102\nInterprétation: Population vieillissante.", e)} onMouseLeave={hideTooltip} />
               <KPICard darkMode={darkMode} title={t.genderStr} value={`${dashboardStats.gender_M} / ${dashboardStats.gender_F}`} subtitle={t.genderSub} valueColor="text-[#8B5CF6]" borderColor="border-l-[#8B5CF6]" icon={Scale} trend="neutral" onMouseEnter={(e) => showTooltip("↔ Stable\nInterprétation: Légère prédominance masculine.", e)} onMouseLeave={hideTooltip} />
-              </div>
+</div>
 
-            <ReadmissionCard
-              readmitForm={readmitForm}
-              setReadmitForm={setReadmitForm}
-              readmitResult={readmitResult}
-              isPredictingReadmit={isPredictingReadmit}
-              handleReadmitPredict={handleReadmitPredict}
-              t={t}
-            />
+<TriageSummaryWidget t={t} onNavigate={() => setActiveTab('Triage')} />
+
+<ReadmissionAutoCard t={t} />
 
             {/* Charts grid: 2 columns, full width */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -673,7 +675,7 @@ export default function App() {
 
       {/* ── TRIAGE TAB ── */}
       {activeTab === 'Triage' && (
-        <div className="flex justify-center" style={{ marginTop: `${navbarH + statusBarH + 24}px` }}>
+        <div className="flex flex-col gap-6" style={{ marginTop: `${navbarH + statusBarH}px` }}>
           <TriagePanel
             formData={formData}
             setFormData={setFormData}
@@ -688,6 +690,14 @@ export default function App() {
             handleAgeInc={handleAgeInc}
             handleAgeChange={handleAgeChange}
           />
+<ReadmissionCard
+  readmitForm={readmitForm}
+  setReadmitForm={setReadmitForm}
+  readmitResult={readmitResult}
+  isPredictingReadmit={isPredictingReadmit}
+  handleReadmitPredict={handleReadmitPredict}
+  t={t}
+/>
         </div>
       )}
 

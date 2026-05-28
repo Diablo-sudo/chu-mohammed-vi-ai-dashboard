@@ -34,6 +34,14 @@ export interface ReadmitForm {
   first_careunit: string;
   admission_type: string;
   primary_service: string;
+  dx_category?: string;
+  sex?: string;
+  prev_hosp_yn?: string;
+  days_since_last_discharge?: number;
+  prev_comorbidity_yn?: string;
+  emergency?: string;
+  emergency_transfer?: string;
+  surgical_service?: string;
 }
 
 export interface FormData {

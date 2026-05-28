@@ -30,49 +30,93 @@ export default function ReadmissionCard({
             className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
         </div>
         <div>
-          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.losDays}</label>
-          <input type="number" min="0" max="365" value={readmitForm.los} onChange={e => setReadmitForm(f => ({...f, los: Number(e.target.value)}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
-        </div>
-        <div>
-          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.numDiags}</label>
-          <input type="number" min="0" max="50" value={readmitForm.num_diagnoses} onChange={e => setReadmitForm(f => ({...f, num_diagnoses: Number(e.target.value)}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
-        </div>
-        <div>
-          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.icuHours}</label>
-          <input type="number" min="0" max="500" value={readmitForm.icu_los_hours} onChange={e => setReadmitForm(f => ({...f, icu_los_hours: Number(e.target.value)}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
-        </div>
-        <div>
-          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.firstCareunit}</label>
-          <select value={readmitForm.first_careunit} onChange={e => setReadmitForm(f => ({...f, first_careunit: e.target.value}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm py-1.5 px-3">
-            <option value="No ICU">{t.noIcu}</option>
-            <option value="MICU">{t.micu}</option>
-            <option value="SICU">{t.sicu}</option>
-            <option value="CCU">{t.ccu}</option>
-            <option value="CVICU">{t.cvicu}</option>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Sexe</label>
+          <select value={readmitForm.sex ?? ''} onChange={e => setReadmitForm(f => ({...f, sex: e.target.value as 'M' | 'F'}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="M">{t.male ?? 'Homme'}</option>
+            <option value="F">{t.female ?? 'Femme'}</option>
           </select>
         </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.primaryDiagnosis ?? 'Diagnostic Principal'}</label>
+          <select value={readmitForm.dx_category ?? ''} onChange={e => setReadmitForm(f => ({...f, dx_category: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="circulatory">Circulatory</option>
+            <option value="digestive">Digestive</option>
+            <option value="injury">Injury</option>
+            <option value="musculoskeletal">Musculoskeletal</option>
+            <option value="neoplasms">Neoplasms</option>
+            <option value="other">Other</option>
+            <option value="respiratory">Respiratory</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.losDays ?? 'Durée séjour (jours)'}</label>
+          <input type="number" min="0" max="365" value={readmitForm.los ?? ''} onChange={e => setReadmitForm(f => ({...f, los: Number(e.target.value)}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
+        </div>
+        {/* Row 2 */}
         <div>
           <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.admissionType}</label>
-          <select value={readmitForm.admission_type} onChange={e => setReadmitForm(f => ({...f, admission_type: e.target.value}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm py-1.5 px-3">
-            <option value="URGENT">{t.urgent}</option>
-            <option value="ELECTIVE">{t.elective}</option>
-            <option value="OBSERVATION">{t.observation}</option>
+          <select value={readmitForm.admission_type ?? ''} onChange={e => setReadmitForm(f => ({...f, admission_type: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="emergency">{t.emergency ?? 'Urgent'}</option>
+            <option value="elective">{t.elective ?? 'Electif'}</option>
+            <option value="newborn">{t.newborn ?? 'Nouveau-né'}</option>
+            <option value="urgent">{t.urgent ?? 'Urgent'}</option>
           </select>
         </div>
         <div>
-          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">{t.primaryService}</label>
-          <select value={readmitForm.primary_service} onChange={e => setReadmitForm(f => ({...f, primary_service: e.target.value}))}
-            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm py-1.5 px-3">
-            <option value="MED">{t.med}</option>
-            <option value="SURG">{t.surg}</option>
-            <option value="CARD">{t.card}</option>
-            <option value="NEUR">{t.neur}</option>
-            <option value="ORT">{t.ort}</option>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Hospitalisation précédente</label>
+          <select value={readmitForm.prev_hosp_yn ?? ''} onChange={e => setReadmitForm(f => ({...f, prev_hosp_yn: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="NO">NON</option>
+            <option value="YES">OUI</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Jours depuis la dernière sortie</label>
+          <input type="number" min="0" max="365" value={readmitForm.days_since_last_discharge ?? ''} onChange={e => setReadmitForm(f => ({...f, days_since_last_discharge: Number(e.target.value)}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]" />
+        </div>
+        {/* Row 3 */}
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Comorbidités précédentes</label>
+          <select value={readmitForm.prev_comorbidity_yn ?? ''} onChange={e => setReadmitForm(f => ({...f, prev_comorbidity_yn: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="NO">NON</option>
+            <option value="YES">OUI</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Urgence</label>
+          <select value={readmitForm.emergency ?? ''} onChange={e => setReadmitForm(f => ({...f, emergency: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="NO">NON</option>
+            <option value="YES">OUI</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Transfert d'urgence</label>
+          <select value={readmitForm.emergency_transfer ?? ''} onChange={e => setReadmitForm(f => ({...f, emergency_transfer: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="NO">NON</option>
+            <option value="YES">OUI</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-[var(--color-chu-text-sec)] uppercase">Service chirurgical</label>
+          <select value={readmitForm.surgical_service ?? ''} onChange={e => setReadmitForm(f => ({...f, surgical_service: e.target.value as any}))}
+            className="w-full bg-[#0D1B2E] border border-[#2A3F5F] rounded-[8px] text-white text-sm font-semibold py-1.5 px-3 focus:outline-none focus:border-[#00D4AA]">
+            <option value="">Non spécifié</option>
+            <option value="NO">NON</option>
+            <option value="YES">OUI</option>
           </select>
         </div>
       </div>
@@ -112,3 +156,5 @@ export default function ReadmissionCard({
     </div>
   );
 }
+
+

@@ -7,6 +7,7 @@ export default function KPICard({ title, value, subtitle, valueColor, borderColo
 }) {
   const match = value.match(/^([\d., /]+)(.*)$/);
   const numPart = match ? match[1].trim() : value;
+  const displayNum = numPart || '—';
   const textPart = match ? match[2].trim() : '';
   const isLight = !darkMode;
   const trendColor = trend === 'positive' ? 'text-[#00D4AA]' : trend === 'negative' ? 'text-[#D64545]' : 'text-[var(--color-chu-text-sec)]';
@@ -19,7 +20,7 @@ export default function KPICard({ title, value, subtitle, valueColor, borderColo
         {Icon && <Icon className="w-5 h-5 text-[var(--color-chu-text-sec)] opacity-40 absolute top-4 right-4" />}
       </div>
       <div className={`text-[3.2rem] font-bold font-mono tracking-tight mt-auto mb-1 leading-none ${valueColor}`}>
-        {numPart}{textPart && <span className={`text-xl font-sans ml-1 text-[var(--color-chu-text-sec)] inline-block align-baseline font-normal`}>{textPart}</span>}
+        {displayNum}{textPart && <span className={`text-xl font-sans ml-1 text-[var(--color-chu-text-sec)] inline-block align-baseline font-normal`}>{textPart}</span>}
       </div>
       <div className={`text-[11px] font-medium leading-tight uppercase flex items-center gap-1 ${trendColor}`}>
         {trend && <span className="text-sm">{trendIcon}</span>}{subtitle}
