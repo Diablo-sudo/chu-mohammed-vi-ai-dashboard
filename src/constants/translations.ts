@@ -31,7 +31,7 @@ export const translations: Record<Lang, { [key: string]: string }> = {
     autoRefresh: "● AUTO-REFRESH ACTIVE (30S)",
     topDiag: "Top Diagnoses (Volume)", distLos: "Distribution LOS (Jours)",
     demoAge: "Démographie par Âge (Groupes)", distGender: "Répartition par Genre", patients: "Patients",
-    readmitRisk: "🔄 Risque de Réadmission 30j",
+    readmitRisk: "Risque de Réadmission 30j",
     readmitRiskEn: "Readmission Risk",
     readmitRiskAr: "خطر إعادة الدخول",
     evaluateRisk: "Évaluer le Risque",
@@ -62,7 +62,7 @@ export const translations: Record<Lang, { [key: string]: string }> = {
   },
   en: {
     patients: "Patients",
-    readmitRisk: "🔄 Readmission Risk 30d",
+    readmitRisk: "Readmission Risk 30d",
     readmitRiskEn: "Readmission Risk",
     readmitRiskAr: "خطر إعادة الدخول",
     evaluateRisk: "Evaluate Risk",
@@ -94,7 +94,7 @@ export const translations: Record<Lang, { [key: string]: string }> = {
   },
   ar: {
     patients: "مرضى",
-    readmitRisk: "🔄 خطر إعادة الدخول ٣٠ يوم",
+    readmitRisk: "خطر إعادة الدخول ٣٠ يوم",
     readmitRiskEn: "Readmission Risk",
     readmitRiskAr: "خطر إعادة الدخول",
     evaluateRisk: "تقييم الخطر",

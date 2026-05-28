@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface ReadmissionAutoCardProps {
   t: Record<string, string>;
@@ -31,11 +31,11 @@ export default function ReadmissionAutoCard({ t }: ReadmissionAutoCardProps) {
   };
 
   return (
-    <div className="bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl p-6" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <div className="bg-[var(--color-chu-card)]/80 backdrop-blur rounded-2xl border border-[var(--color-chu-border)]/10 shadow-xl p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[var(--color-chu-text)] font-bold text-lg flex items-center gap-2">
-          <RefreshCw className="w-5 h-5 text-[var(--color-chu-primary)]" /> {t.readmitRisk}
+          <RefreshCw className="w-5 h-5 text-[var(--color-chu-primary)] mr-2" /> {t.readmitRisk}
         </h3>
         <span className="bg-[var(--color-chu-primary)]/10 text-[var(--color-chu-primary)] border border-[var(--color-chu-primary)]/20 rounded-full px-3 py-1 text-xs font-medium">
           Analyse automatique
@@ -43,17 +43,17 @@ export default function ReadmissionAutoCard({ t }: ReadmissionAutoCardProps) {
       </div>
 
         {/* SECTION 1 – Risk Distribution */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {Object.entries(riskDistribution).map(([key, data]) => {
-            const styleMap = {
-              high: { border: 'border-l-4 border-[#D64545]', bg: 'bg-[#2A0A0A]', text: '#D64545', icon: '🔴' },
-              moderate: { border: 'border-l-4 border-[#FF8C00]', bg: 'bg-[#2A1A00]', text: '#FF8C00', icon: '🟡' },
-              low: { border: 'border-l-4 border-[#00D4AA]', bg: 'bg-[#0A2A20]', text: '#00D4AA', icon: '🟢' },
-            }[key];
-            return (
-              <div key={key} className={`rounded-xl p-4 flex flex-col items-center ${styleMap.border} ${styleMap.bg}`}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {Object.entries(riskDistribution).map(([key, data]) => {
+              const styleMap = {
+                high: { border: 'border-l-4 border-[#D64545]', text: '#D64545', Icon: AlertTriangle },
+                moderate: { border: 'border-l-4 border-[#FF8C00]', text: '#FF8C00', Icon: AlertCircle },
+                low: { border: 'border-l-4 border-[#00D4AA]', text: '#00D4AA', Icon: CheckCircle },
+              }[key];
+              return (
+                <div key={key} className={`group bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] ${styleMap.border} p-4 rounded-xl flex flex-col items-center transition-all duration-300 hover:-translate-y-[3px] hover:shadow-xl cursor-default`}>
                 <div className="flex items-center text-2xl font-bold" style={{ color: styleMap.text }}>
-                  <span className="mr-2">{styleMap.icon}</span>{data.label}
+                  <styleMap.Icon className="mr-2 w-5 h-5" />{data.label}
                 </div>
                 <div className="text-[var(--color-chu-text)] mt-2">
                   {data.count} patients ({data.percent})
