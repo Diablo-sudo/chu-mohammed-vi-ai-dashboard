@@ -1,5 +1,6 @@
 import React from 'react';
 import { RefreshCw, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
+import KPICard from './KPICard';
 
 interface ReadmissionAutoCardProps {
   t: Record<string, string>;
@@ -50,16 +51,18 @@ export default function ReadmissionAutoCard({ t }: ReadmissionAutoCardProps) {
                 moderate: { border: 'border-l-4 border-[#FF8C00]', text: '#FF8C00', Icon: AlertCircle },
                 low: { border: 'border-l-4 border-[#00D4AA]', text: '#00D4AA', Icon: CheckCircle },
               }[key];
-              return (
-                <div key={key} className={`group bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] ${styleMap.border} p-4 rounded-xl flex flex-col items-center transition-all duration-300 hover:-translate-y-[3px] hover:shadow-xl cursor-default`}>
-                <div className="flex items-center text-2xl font-bold" style={{ color: styleMap.text }}>
-                  <styleMap.Icon className="mr-2 w-5 h-5" />{data.label}
-                </div>
-                <div className="text-[var(--color-chu-text)] mt-2">
-                  {data.count} patients ({data.percent})
-                </div>
-              </div>
-            );
+                return (
+                  <div key={key}>
+                    <KPICard
+                      title={data.label}
+                      value={`${data.count}`}
+                      subtitle={data.percent}
+                      valueColor={`text-[${styleMap.text}]`}
+                      borderColor={`border-l-[${styleMap.text}]`}
+                      icon={styleMap.Icon}
+                    />
+                  </div>
+                );
           })}
         </div>
 
