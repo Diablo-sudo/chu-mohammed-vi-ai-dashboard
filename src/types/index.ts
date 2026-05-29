@@ -59,3 +59,19 @@ export interface FormData {
 
 // FIX: Lang type for type-safe language switching (FIX 6)
 export type Lang = 'fr' | 'en' | 'ar';
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+export interface ToastItem {
+  id: string;
+  type: ToastType;
+  title?: string;
+  message: string;
+  duration?: number;
+  action?: ToastAction;
+}

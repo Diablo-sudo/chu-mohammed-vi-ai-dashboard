@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import type { Predictions, DashboardStats, FormData } from '../types';
 import { API_BASE } from '../constants/translations';
+import { useToast } from './useToast';
 
 interface UsePredictionsParams {
   dashboardStats: DashboardStats;
   formData: FormData;
   t: any;
-  setToast: React.Dispatch<React.SetStateAction<{ message: string; type: 'success' | 'error' } | null>>;
   addAlert: (severity: any, message: string) => void;
   setErrorMsg: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function usePredictions({ dashboardStats, formData, t, setToast, addAlert, setErrorMsg }: UsePredictionsParams) {
+export function usePredictions({ dashboardStats, formData, t, addAlert, setErrorMsg }: UsePredictionsParams) {
+  const { addToast } = useToast();
   const [predictions, setPredictions] = useState<Predictions | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [readmitResult, setReadmitResult] = useState<{ risk?: number; message?: string } | null>(null);
@@ -79,8 +80,7 @@ export function usePredictions({ dashboardStats, formData, t, setToast, addAlert
         urgencyScoreVal = uScore;
       }
       setPredictions({ load: loadVal, los: losVal, triage: triageVal, is_urgent: isUrgentVal, urgency_score: urgencyScoreVal });
-      setToast({ message: "✓ Analyse complète et prédictions générées", type: 'success' });
-      setTimeout(() => setToast(null), 3000);
+      addToast('success', "Analyse complète et prédictions générées");
       if (triageVal === 1) addAlert('CRITIQUE', "Patient critique détecté - Action immédiate requise");
       if (losVal > 14) addAlert('ATTENTION', `Durée de séjour élevée prévue (${losVal.toFixed(1)} j)`);
     } catch (err) {
@@ -90,8 +90,7 @@ export function usePredictions({ dashboardStats, formData, t, setToast, addAlert
       } else {
         console.error(err);
         setErrorMsg("Erreur lors de l'appel au modèle ML. Vérifiez que ngrok est actif.");
-        setToast({ message: "⚠ API indisponible - Échec de l'analyse", type: 'error' });
-        setTimeout(() => setToast(null), 3000);
+        addToast('error', "API indisponible - Échec de l'analyse");
       }
     } finally {
       setIsPredicting(false);

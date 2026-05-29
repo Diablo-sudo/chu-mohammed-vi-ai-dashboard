@@ -1,6 +1,17 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 
+class SparklineBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return (this as any).props.children;
+  }
+}
+
 export default function KPICard({ title, value, subtitle, valueColor, borderColor, icon: Icon, darkMode, onMouseEnter, onMouseLeave, trend, background, sparklineData, sparklineColor, sparklineFill }: { 
   title: string, value: string, subtitle: string, valueColor: string, borderColor: string, icon: any, darkMode?: boolean, onMouseEnter?: (e: React.MouseEvent) => void, onMouseLeave?: () => void, 
   trend?: 'positive' | 'negative' | 'neutral', background?: 'red' | 'green', sparklineData?: number[], sparklineColor?: string, sparklineFill?: string 
@@ -26,6 +37,7 @@ export default function KPICard({ title, value, subtitle, valueColor, borderColo
         {trend && <span className="text-sm">{trendIcon}</span>}{subtitle}
       </div>
       {sparklineData && sparklineData.length > 0 && (
+        <SparklineBoundary>
         <div className="absolute bottom-0 left-0 right-0 h-10 overflow-hidden rounded-b-xl">
           <Line data={{
             labels: sparklineData.map((_, i) => i),
@@ -40,6 +52,7 @@ export default function KPICard({ title, value, subtitle, valueColor, borderColo
             }]
           }} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } }, elements: { line: { borderCapStyle: 'round' } } }} />
         </div>
+        </SparklineBoundary>
       )}
     </div>
   );
