@@ -53,7 +53,7 @@ export default function App() {
   const initAlertsGuard = useRef(false); // guard against duplicate startup alerts
   const [navbarH, setNavbarH] = useState(88);
   const [statusBarH, setStatusBarH] = useState(0);
-  const [apiStatus, setApiStatus] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
+  const [apiStatus, setApiStatus] = useState<'ONLINE' | 'OFFLINE' | 'CHECKING'>('CHECKING');
   const [activeTab, setActiveTab] = useState('Dashboard');
 
   // ── Navbar height measurement ──
@@ -110,9 +110,14 @@ export default function App() {
   const { dashboardStats, setDashboardStats, syncStr, setSyncStr, lastSheetSync, setLastSheetSync, syncFromSheet } = useDashboardStats();
 
   // ── Google Sheets auto-sync ──
+  const isLocalRef = useRef(dashboardStats.isLocal);
+  isLocalRef.current = dashboardStats.isLocal;
+
   useEffect(() => {
-    syncFromSheet?.();
-    const id = setInterval(syncFromSheet ?? (() => {}), 30000);
+    if (!isLocalRef.current) syncFromSheet?.();
+    const id = setInterval(() => {
+      if (!isLocalRef.current) syncFromSheet?.();
+    }, 30000);
     return () => clearInterval(id);
   }, [syncFromSheet]);
 
@@ -155,26 +160,35 @@ export default function App() {
   async function handleReadmitPredict() {
     setIsPredictingReadmit(true);
     setReadmitResult(null);
+    const charlsonProxy = Math.min(10, (readmitForm.anchor_age / 20) + (readmitForm.num_diagnoses / 3));
+    const vitalRisk = Math.min(3, (
+      (formData.heartrate > 100 ? 1 : 0) +
+      (formData.sbp < 90 ? 1 : 0) +
+      (formData.o2sat < 90 ? 1 : 0)
+    ));
+    const genderCode = formData.gender === 'Femme' ? 'F' : 'M';
+    const ageGroup = readmitForm.anchor_age >= 65 ? '65+' : readmitForm.anchor_age >= 40 ? '40-64' : '18-39';
+    const surgicalFlag = readmitForm.primary_service === 'SURG' ? 1 : 0;
     const payload = {
       anchor_age: readmitForm.anchor_age,
       num_diagnoses: readmitForm.num_diagnoses,
-      charlson_proxy_score: 2.0,
+      charlson_proxy_score: charlsonProxy,
       icu_los_hours: readmitForm.icu_los_hours,
-      num_icu_stays: 1,
+      num_icu_stays: readmitForm.icu_los_hours > 0 ? 1 : 0,
       ed_los_hours: 3.0,
-      ed_acuity: 2.0,
-      surgical_flag: 0,
-      vital_risk_score: 1.5,
+      ed_acuity: vitalRisk > 1 ? 3.0 : 2.0,
+      surgical_flag: surgicalFlag,
+      vital_risk_score: vitalRisk,
       los: readmitForm.los,
       weekend_admit: 0,
       night_admit: 0,
-      gender: "M",
+      gender: genderCode,
       admission_type: readmitForm.admission_type,
       insurance: "Medicare",
       first_careunit: readmitForm.first_careunit === 'No ICU' ? 'NONE' : readmitForm.first_careunit,
       primary_service: readmitForm.primary_service,
       season: getSeason(),
-      age_group: "65+"
+      age_group: ageGroup
     };
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -217,8 +231,8 @@ export default function App() {
     }
     if (!initAlertsGuard.current) {
       initAlertsGuard.current = true;
-      addAlert('INFO', `Système IA opérationnel - Dernière sync: ${formatTime(new Date())}`);
-      addAlert('AVERTISSEMENT', 'Taux de réadmission > 10% ce mois');
+      addAlert('INFO', `${t.systemOnline} ${formatTime(new Date())}`);
+      addAlert('AVERTISSEMENT', t.readmissionAlert);
     }
 
     const updateTime = () => {
@@ -255,42 +269,30 @@ export default function App() {
       const data = await res.json();
       setDashboardStats({
          // FIX: Zero-value guard
-         total_patients: (data.total_patients !== undefined && data.total_patients !== null && data.total_patients !== 0) ? data.total_patients : dashboardStats.total_patients,
-         // FIX: Zero-value guard
-         avg_los: (data.avg_los !== undefined && data.avg_los !== null && data.avg_los !== 0) ? data.avg_los : dashboardStats.avg_los,
-         // FIX: Zero-value guard
-         readmission_rate: (data.readmission_rate !== undefined && data.readmission_rate !== null && data.readmission_rate !== 0) ? data.readmission_rate : dashboardStats.readmission_rate,
-         // FIX: Zero-value guard
-         mortality_rate: (data.mortality_rate !== undefined && data.mortality_rate !== null && data.mortality_rate !== 0) ? data.mortality_rate : dashboardStats.mortality_rate,
-         // FIX: Zero-value guard
-         avg_age: (data.avg_age !== undefined && data.avg_age !== null && data.avg_age !== 0) ? data.avg_age : dashboardStats.avg_age,
-         // FIX: Zero-value guard
-         gender_M: (data.gender_M !== undefined && data.gender_M !== null && data.gender_M !== 0) ? data.gender_M : dashboardStats.gender_M,
-         // FIX: Zero-value guard
-         gender_F: (data.gender_F !== undefined && data.gender_F !== null && data.gender_F !== 0) ? data.gender_F : dashboardStats.gender_F,
+          total_patients: (data.total_patients !== undefined && data.total_patients !== null) ? data.total_patients : dashboardStats.total_patients,
+          avg_los: (data.avg_los !== undefined && data.avg_los !== null) ? data.avg_los : dashboardStats.avg_los,
+          readmission_rate: (data.readmission_rate !== undefined && data.readmission_rate !== null) ? data.readmission_rate : dashboardStats.readmission_rate,
+          mortality_rate: (data.mortality_rate !== undefined && data.mortality_rate !== null) ? data.mortality_rate : dashboardStats.mortality_rate,
+          avg_age: (data.avg_age !== undefined && data.avg_age !== null) ? data.avg_age : dashboardStats.avg_age,
+          gender_M: (data.gender_M !== undefined && data.gender_M !== null) ? data.gender_M : dashboardStats.gender_M,
+          gender_F: (data.gender_F !== undefined && data.gender_F !== null) ? data.gender_F : dashboardStats.gender_F,
         top_diagnoses: data.top_diagnoses || dashboardStats.top_diagnoses,
         los_distribution: data.los_distribution || dashboardStats.los_distribution,
         isLocal: true,
       });
       localStorage.setItem('dashboardStats', JSON.stringify({
          // FIX: Zero-value guard
-         total_patients: (data.total_patients !== undefined && data.total_patients !== null && data.total_patients !== 0) ? data.total_patients : dashboardStats.total_patients,
-         // FIX: Zero-value guard
-         avg_los: (data.avg_los !== undefined && data.avg_los !== null && data.avg_los !== 0) ? data.avg_los : dashboardStats.avg_los,
-         // FIX: Zero-value guard
-         readmission_rate: (data.readmission_rate !== undefined && data.readmission_rate !== null && data.readmission_rate !== 0) ? data.readmission_rate : dashboardStats.readmission_rate,
-         // FIX: Zero-value guard
-         mortality_rate: (data.mortality_rate !== undefined && data.mortality_rate !== null && data.mortality_rate !== 0) ? data.mortality_rate : dashboardStats.mortality_rate,
-         // FIX: Zero-value guard
-         avg_age: (data.avg_age !== undefined && data.avg_age !== null && data.avg_age !== 0) ? data.avg_age : dashboardStats.avg_age,
-         // FIX: Zero-value guard
-         gender_M: (data.gender_M !== undefined && data.gender_M !== null && data.gender_M !== 0) ? data.gender_M : dashboardStats.gender_M,
-         // FIX: Zero-value guard
-         gender_F: (data.gender_F !== undefined && data.gender_F !== null && data.gender_F !== 0) ? data.gender_F : dashboardStats.gender_F,
+          total_patients: (data.total_patients !== undefined && data.total_patients !== null) ? data.total_patients : dashboardStats.total_patients,
+          avg_los: (data.avg_los !== undefined && data.avg_los !== null) ? data.avg_los : dashboardStats.avg_los,
+          readmission_rate: (data.readmission_rate !== undefined && data.readmission_rate !== null) ? data.readmission_rate : dashboardStats.readmission_rate,
+          mortality_rate: (data.mortality_rate !== undefined && data.mortality_rate !== null) ? data.mortality_rate : dashboardStats.mortality_rate,
+          avg_age: (data.avg_age !== undefined && data.avg_age !== null) ? data.avg_age : dashboardStats.avg_age,
+          gender_M: (data.gender_M !== undefined && data.gender_M !== null) ? data.gender_M : dashboardStats.gender_M,
+          gender_F: (data.gender_F !== undefined && data.gender_F !== null) ? data.gender_F : dashboardStats.gender_F,
         top_diagnoses: data.top_diagnoses || dashboardStats.top_diagnoses,
         los_distribution: data.los_distribution || dashboardStats.los_distribution,
       }));
-      addToast('success', "Données mises à jour");
+      addToast('success', t.dataUpdated);
       const dt = new Date();
       const dateStr = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(dt);
       const timeStr = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -298,7 +300,7 @@ export default function App() {
       setShowUploadModal(false);
       setUploadFiles({ admissions: null, patients: null, diagnoses: null });
     } catch (err) {
-      addToast('error', "Erreur de connexion");
+      addToast('error', t.connectionError);
     } finally { setIsUploading(false); }
   }
 
@@ -345,13 +347,18 @@ export default function App() {
           {/* ── Navigation pills ── */}
           <div className="hidden lg:flex shrink-0 justify-center">
             <nav className="flex space-x-1 bg-[var(--color-chu-bg)] p-1 rounded-full border border-[var(--color-chu-border)]">
-              {['Dashboard', 'Statistiques', 'Triage', 'Rapports'].map((item) => (
-                <button key={item} onClick={() => setActiveTab(item)}
+              {[
+                { key: 'Dashboard', label: t.tabDashboard },
+                { key: 'Statistiques', label: t.tabStats },
+                { key: 'Triage', label: t.tabTriage },
+                { key: 'Rapports', label: t.tabReports }
+              ].map(({ key, label }) => (
+                <button key={key} onClick={() => setActiveTab(key)}
                   className={`px-3 lg:px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
-                    activeTab === item
+                    activeTab === key
                       ? 'bg-[#00D4AA] text-[#0B1426] shadow-[0_0_15px_rgba(0,212,170,0.3)] font-bold'
                       : 'text-[var(--color-chu-text-sec)] hover:text-[#00D4AA] hover:bg-[var(--color-chu-header)]'
-                  }`}>{item}</button>
+                  }`}>{label}</button>
               ))}
             </nav>
           </div>
@@ -386,9 +393,9 @@ export default function App() {
 
             {/* Upload */}
             <button onClick={() => setShowUploadModal(true)}
-              title="Mettre à jour avec vos données hospitalières"
+               title={t.uploadTooltip}
               className="relative px-2 py-2 sm:px-4 sm:py-2 bg-[#00D4AA] hover:bg-[#1DE9B6] text-[#0B1426] font-semibold text-sm rounded-lg flex items-center gap-1 sm:gap-2 transition-all shadow-sm hover:shadow-[0_4px_12px_rgba(0,212,170,0.4)] ml-0.5 sm:ml-1 mr-0.5 sm:mr-1">
-              <Upload size={16} strokeWidth={2.5} className="shrink-0" /> <span className="hidden md:inline">Charger données</span>
+              <Upload size={16} strokeWidth={2.5} className="shrink-0" /> <span className="hidden md:inline">{t.uploadButton}</span>
               {!dashboardStats.isLocal && (
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF8C00] rounded-full animate-pulse border-2 border-[var(--color-chu-header)]"></span>
               )}
@@ -450,27 +457,27 @@ export default function App() {
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
           {/* API Status */}
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border font-semibold ${
-            apiStatus === 'ONLINE' ? 'bg-[#00D4AA]/10 text-[#00D4AA] border border-[#00D4AA]/20' : 'bg-[#FF4444]/10 text-[#FF4444] border border-[#FF4444]/20'}`}>
+            apiStatus === 'ONLINE' ? 'bg-[#00D4AA]/10 text-[#00D4AA] border border-[#00D4AA]/20' : apiStatus === 'CHECKING' ? 'bg-[#E8A020]/10 text-[#E8A020] border border-[#E8A020]/20' : 'bg-[#FF4444]/10 text-[#FF4444] border border-[#FF4444]/20'}`}>
             <span className={`relative flex h-2 w-2`}>
-              <span className={`${apiStatus === 'ONLINE' ? 'animate-ping bg-[#00D4AA]' : 'bg-[#FF4444]'} absolute inline-flex h-full w-full rounded-full opacity-75`}></span>
-              <span className={`${apiStatus === 'ONLINE' ? 'bg-[#00D4AA]' : 'bg-[#FF4444]'} relative inline-flex rounded-full h-2 w-2`}></span>
+              <span className={`${apiStatus === 'ONLINE' ? 'animate-ping bg-[#00D4AA]' : apiStatus === 'CHECKING' ? 'bg-[#E8A020]' : 'bg-[#FF4444]'} absolute inline-flex h-full w-full rounded-full opacity-75`}></span>
+              <span className={`${apiStatus === 'ONLINE' ? 'bg-[#00D4AA]' : apiStatus === 'CHECKING' ? 'bg-[#E8A020]' : 'bg-[#FF4444]'} relative inline-flex rounded-full h-2 w-2`}></span>
             </span>
-            <span>{apiStatus === 'ONLINE' ? t.apiOnline : 'API: HORS LIGNE'}</span>
+            <span>{apiStatus === 'ONLINE' ? t.apiOnline : apiStatus === 'CHECKING' ? 'VÉRIFICATION...' : t.apiOffline}</span>
           </div>
           <div className="px-3 py-1.5 bg-[#00D4AA]/10 text-[#00D4AA] border border-[#00D4AA]/20 rounded-md font-bold tracking-wide">
-            {dashboardStats.isLocal ? "DONNÉES LOCALES" : t.mimicDb}
+            {dashboardStats.isLocal ? t.localData : t.mimicDb}
           </div>
             <div className="hidden md:flex items-center gap-2 text-[9px] font-mono">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${syncStr.startsWith("✅") ? 'bg-[#00D4AA]/10 text-[#00D4AA] border-[#00D4AA]/20' : syncStr.startsWith("⚠") ? 'bg-[#D64545]/10 text-[#D64545] border-[#D64545]/20' : 'bg-[#E8A020]/10 text-[#E8A020] border-[#E8A020]/20'}`}>
                 <RefreshCw size={10} className={syncStr.startsWith("⚠") ? '' : 'hidden'} />
                 <span className="font-semibold">GOOGLE SHEETS</span>
-                <span className="font-medium tracking-wide">{syncStr || <span className="text-[9px] opacity-50">En attente...</span>}</span>
+                <span className="font-medium tracking-wide">{syncStr || <span className="text-[9px] opacity-50">{t.loading}</span>}</span>
                 {lastSheetSync && <span className="opacity-70 text-[10px]">({lastSheetSync})</span>}
               </div>
             </div>
         </div>
         <div className="flex items-center gap-2 bg-[var(--color-chu-card)] px-3 py-1.5 rounded-md border border-[var(--color-chu-border)]">
-          <span className="font-semibold text-[var(--color-chu-text)] uppercase">LANG: {lang === 'ar' ? 'العربية' : lang === 'fr' ? 'Français' : 'English'}</span>
+          <span className="font-semibold text-[var(--color-chu-text)] uppercase">{lang === 'ar' ? 'العربية' : lang === 'fr' ? 'Français' : 'English'}</span>
 </div>
        </div>
 
@@ -487,8 +494,6 @@ export default function App() {
       darkMode={darkMode}
       t={t}
       dashboardStats={dashboardStats}
-      showTooltip={showTooltip}
-      hideTooltip={hideTooltip}
       setActiveTab={setActiveTab}
     />
   </div>
@@ -500,8 +505,6 @@ export default function App() {
       darkMode={darkMode}
       t={t}
       dashboardStats={dashboardStats}
-      showTooltip={showTooltip}
-      hideTooltip={hideTooltip}
     />
   </div>
 )}
@@ -557,6 +560,7 @@ export default function App() {
           setUploadFiles={setUploadFiles}
           isUploading={isUploading}
           submitUpload={submitUpload}
+          t={t}
         />
       )}
       

@@ -254,6 +254,21 @@ export default function TriagePanel({
                   inputMode="decimal"
                 />
               </div>
+
+              {/* Respiratory Rate */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-semibold text-[#00D4AA] uppercase tracking-[1px]">{t.resprate ?? 'Resp. Rate'}</label>
+                <input
+                  type="number"
+                  min="8"
+                  max="60"
+                  value={formData.resprate}
+                  onChange={e => { const v = Number(e.target.value); setFormData(p => ({ ...p, resprate: isNaN(v) ? 16 : Math.max(8, Math.min(60, v)) })); }}
+                  className="w-full bg-[#0A1628] border border-white/10 rounded-xl p-3 text-white text-sm font-semibold placeholder-white/30"
+                  placeholder="bpm"
+                  inputMode="numeric"
+                />
+              </div>
             </div>
 
             {/* Pain */}
@@ -332,7 +347,7 @@ export default function TriagePanel({
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }} className="w-full">
               <div className={`absolute top-0 left-0 w-full h-[4px] ${predictions.triage === 1 ? 'bg-[#FF4444]' : predictions.triage === 2 ? 'bg-[#FF8C00]' : 'bg-[#00D4AA]'}`} />
               <div className="flex justify-between items-center mb-4 pt-1">
-                <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">Niveau Triage</span>
+                <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">{t.triageLevel}</span>
                 <div
                   className={`px-3 py-1.5 rounded-md text-white text-sm font-bold shadow-sm flex items-center ${
                     predictions.triage === 1
@@ -349,7 +364,7 @@ export default function TriagePanel({
               <div className="space-y-5">
                 <div>
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">Score de Charge</span>
+                    <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">{t.loadScore}</span>
                     <span className="text-white text-[16px] font-bold">
                       {Math.round((predictions.urgency_score || 0) * 100)}%
                     </span>
@@ -370,13 +385,13 @@ export default function TriagePanel({
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">Durée Estimée</span>
+                  <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider">{t.estLos}</span>
                   <span className="text-white text-[16px] font-bold">
                     {predictions.los?.toFixed(1)} <span className="text-sm font-normal text-[#8899AA]">{t.days}</span>
                   </span>
                 </div>
                 <div className="flex justify-between items-start gap-4">
-                  <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider mt-1 whitespace-nowrap">Recommandation</span>
+                  <span className="text-[#8899AA] text-[11px] uppercase font-bold tracking-wider mt-1 whitespace-nowrap">{t.recommendation}</span>
                   <span className="text-white text-[14px] font-medium text-right leading-snug">
                     {predictions.triage === 1 ? t.p1Desc : predictions.triage === 2 ? t.p2Desc : t.p3Desc}
                   </span>
@@ -386,7 +401,7 @@ export default function TriagePanel({
           ) : (
             <div className="flex flex-col items-center text-white">
               <AlertTriangle className="w-12 h-12 text-[#00D4AA] mb-2" />
-              <p>En attente de prédiction...</p>
+              <p>{t.waitingForPrediction}</p>
             </div>
           )}
         </div>

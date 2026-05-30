@@ -4,7 +4,7 @@ interface RapportsTabProps {
   dashboardStats: any;
   t: Record<string, string>;
   syncStr: string;
-  apiStatus: 'ONLINE' | 'OFFLINE';
+  apiStatus: 'ONLINE' | 'OFFLINE' | 'CHECKING';
   handleExport: () => void;
 }
 
@@ -35,42 +35,42 @@ const RapportsTab: React.FC<RapportsTabProps> = ({ dashboardStats, t, syncStr, a
         <div className="text-3xl font-bold text-[#38A8D4] font-mono mt-2">{(isNaN(Number(dashboardStats.avg_age)) ? 0 : Math.round(Number(dashboardStats.avg_age)))} ans</div>
       </div>
       <div className="bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl p-4">
-        <span className="text-[11px] font-bold text-[var(--color-chu-text-sec)] uppercase">Données</span>
-        <div className="text-2xl font-bold text-[#8B5CF6] font-mono mt-2">{dashboardStats.isLocal ? 'Locales' : t.mimicDb}</div>
+        <span className="text-[11px] font-bold text-[var(--color-chu-text-sec)] uppercase">{t.data}</span>
+        <div className="text-2xl font-bold text-[#8B5CF6] font-mono mt-2">{dashboardStats.isLocal ? t.local : t.mimicDb}</div>
       </div>
     </div>
 
     {/* Metadata */}
     <div className="bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl p-6 space-y-3">
       <div className="flex items-center justify-between py-2 border-b border-[var(--color-chu-border)]">
-        <span className="text-[var(--color-chu-text-sec)] font-semibold">Dernière mise à jour</span>
+        <span className="text-[var(--color-chu-text-sec)] font-semibold">{t.lastUpdate}</span>
         <span className="text-[var(--color-chu-text)] font-mono">{syncStr}</span>
       </div>
       <div className="flex items-center justify-between py-2 border-b border-[var(--color-chu-border)]">
-        <span className="text-[var(--color-chu-text-sec)] font-semibold">Statut API</span>
-        <span className={`font-bold font-mono ${apiStatus === 'ONLINE' ? 'text-[#00D4AA]' : 'text-[#FF4444]'}`}>{apiStatus === 'ONLINE' ? 'ONLINE (RAILWAY)' : 'HORS LIGNE'}</span>
+        <span className="text-[var(--color-chu-text-sec)] font-semibold">{t.apiStatus}</span>
+        <span className={`font-bold font-mono ${apiStatus === 'ONLINE' ? 'text-[#00D4AA]' : apiStatus === 'CHECKING' ? 'text-[#E8A020]' : 'text-[#FF4444]'}`}>{apiStatus === 'ONLINE' ? 'ONLINE (RAILWAY)' : apiStatus === 'CHECKING' ? 'VÉRIFICATION...' : t.apiOffline}</span>
       </div>
       <div className="flex items-center justify-between py-2 border-b border-[var(--color-chu-border)]">
-        <span className="text-[var(--color-chu-text-sec)] font-semibold">Modèle ML</span>
-        <span className="text-[var(--color-chu-text)] font-mono">MIMIC-IV Predict v2.4</span>
+        <span className="text-[var(--color-chu-text-sec)] font-semibold">{t.mlModel}</span>
+        <span className="text-[var(--color-chu-text)] font-mono">{t.noData}</span>
       </div>
     </div>
 
     {/* Model Performance */}
     <div className="bg-[var(--color-chu-card)] border border-[var(--color-chu-border)] rounded-xl p-6">
-      <h3 className="text-sm font-bold text-[var(--color-chu-text)] mb-4 uppercase tracking-wide">Performances du Modèle</h3>
+      <h3 className="text-sm font-bold text-[var(--color-chu-text)] mb-4 uppercase tracking-wide">{t.modelPerformance}</h3>
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center p-4 rounded-lg bg-[rgba(0,212,170,0.05)] border border-[rgba(0,212,170,0.15)]">
-          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">Charge Hospitalière</div>
-          <div className="text-xl font-bold text-[#00D4AA] font-mono">MAE = 0.018</div>
+          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">{t.hospitalLoad}</div>
+          <div className="text-xl font-bold text-[#00D4AA] font-mono">{t.noData}</div>
         </div>
         <div className="text-center p-4 rounded-lg bg-[rgba(0,212,170,0.05)] border border-[rgba(0,212,170,0.15)]">
-          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">Durée de Séjour</div>
-          <div className="text-xl font-bold text-[#00D4AA] font-mono">R² = 0.331</div>
+          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">{t.lengthOfStay}</div>
+          <div className="text-xl font-bold text-[#00D4AA] font-mono">{t.noData}</div>
         </div>
         <div className="text-center p-4 rounded-lg bg-[rgba(0,212,170,0.05)] border border-[rgba(0,212,170,0.15)]">
-          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">Triage Clinique</div>
-          <div className="text-xl font-bold text-[#00D4AA] font-mono">Recall = 77.7%</div>
+          <div className="text-[10px] font-bold text-[var(--color-chu-text-sec)] uppercase mb-1">{t.clinicalTriage}</div>
+          <div className="text-xl font-bold text-[#00D4AA] font-mono">{t.noData}</div>
         </div>
       </div>
     </div>
